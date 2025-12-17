@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="id">
+<head>
+<script src="../auth.js"></script>
+<script>protect();</script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CBT Tes Sikap Kerja (Tes Koran) TNI AD</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--primary:#1e88e5;--danger:#d32f2f;--muted:#6b7280}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg)}
+header{background:linear-gradient(135deg,#1e88e5,#1565c0);color:#fff;padding:16px;text-align:center;position:relative}
+header::after{content:'Persona Research & Consulting';position:absolute;bottom:6px;right:12px;font-size:11px;opacity:.25}
+.container{max-width:1100px;margin:20px auto;padding:12px}
+.card{background:var(--card);border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.08);padding:20px}
+.meta{display:flex;justify-content:space-between;flex-wrap:wrap;font-size:14px}
+.timer{font-weight:bold}
+.table{display:grid;grid-template-columns:1fr 360px 1fr;gap:12px;margin-top:16px;align-items:flex-start}
+.col{border:1px solid #e5e7eb;background:#fafafa;overflow:hidden;position:relative}
+.col-inner{display:grid;grid-template-rows:repeat(150,1fr);position:relative;will-change:transform}
+.col.inactive{opacity:.4}
+.col.activeCol{outline:3px solid #1e88e5}
+.keypad-slot{position:sticky;top:12px}
+.cell{padding:8px;border-bottom:1px solid #e5e7eb;text-align:center;font-weight:bold;font-size:18px}
+.cell.focus{background:#e3f2fd;outline:2px solid #1e88e5}
+.cell.focus>div{background:#bbdefb;border-radius:4px}
+.btn{padding:18px 0;border:none;border-radius:14px;cursor:pointer;font-size:20px;font-weight:bold;transition:transform .08s ease, box-shadow .08s ease}
+.btn-danger{background:var(--danger);color:#fff}
+#keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px;justify-items:center}
+.keypad-btn{background:linear-gradient(135deg,#42a5f5,#1e88e5);color:#fff;min-width:64px;box-shadow:0 5px 0 #1565c0}
+.keypad-btn.zero{grid-column:2} .keypad-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #1565c0}
+.result-page{display:none}
+.score{font-size:32px;font-weight:bold;color:red}
+footer{text-align:center;margin-top:24px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" style="min-height:100vh;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;padding:28px;border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,.12);max-width:360px;width:100%;text-align:center">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..." alt="Persona Research & Consulting" style="max-width:160px;margin-bottom:14px" />
+    <h3>CBT Tes Sikap Kerja (Tes Koran)</h3><div style="margin-top:6px;font-size:13px;color:#6b7280">Persona Research &amp; Consulting</div>
+    <input id="pw" type="password" placeholder="Password" style="width:100%;padding:12px;margin-bottom:12px" />
+    <button id="btnLogin" style="width:100%;padding:12px;background:#1e88e5;color:#fff;border:none;border-radius:8px">Mulai Tes</button>
+    <div id="err" style="color:red;display:none;margin-top:8px">Password salah</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+<header>
+  <h2>CBT Tes Sikap Kerja (Tes Koran)</h2>
+  <div class="meta">
+    <div>Created by : <b>Persona Research And Consulting</b></div>
+    <div class="timer">Kolom <span id="col">1</span>/20 — Sisa Waktu Kolom: <span id="time">03:00</span> | Sisa Waktu Total: <span id="timeTotal">60:00</span></div>
+  </div>
+</header>
+
+<div class="container"><div class="card">
+<p><b>Petunjuk:</b> Jumlahkan dua angka dari atas ke bawah. Waktu tiap kolom 3 menit.</p>
+<div class="table">
+  <div id="colLeft" class="col"></div>
+  <div class="keypad-slot"><div id="keypad">
+    <button class="btn keypad-btn" onclick="pressKey(1)">1</button>
+    <button class="btn keypad-btn" onclick="pressKey(2)">2</button>
+    <button class="btn keypad-btn" onclick="pressKey(3)">3</button>
+    <button class="btn keypad-btn" onclick="pressKey(4)">4</button>
+    <button class="btn keypad-btn" onclick="pressKey(5)">5</button>
+    <button class="btn keypad-btn" onclick="pressKey(6)">6</button>
+    <button class="btn keypad-btn" onclick="pressKey(7)">7</button>
+    <button class="btn keypad-btn" onclick="pressKey(8)">8</button>
+    <button class="btn keypad-btn" onclick="pressKey(9)">9</button>
+    <button class="btn keypad-btn zero" onclick="pressKey(0)">0</button>
+  </div></div>
+  <div id="colRight" class="col"></div>
+</div>
+<button class="btn btn-danger" style="margin-top:16px" onclick="finish()">Selesai</button>
+</div></div>
+</div>
+
+<!-- RESULT -->
+<div id="resultPage" class="result-page container">
+  <div class="card">
+    <h2>Hasil Penilaian Tes Pauli</h2>
+    <div id="summaryTable"></div>
+    <div class="score" id="score"></div>
+    <p id="detail"></p>
+    <div id="interpretasi"></div>
+    <canvas id="pauliChart" width="900" height="260" style="margin-top:20px"></canvas>
+  </div>
+</div>
+
+<footer>Expired : <b>5 Mei 2026</b></footer>
+
+<script>
+// ================== KONFIGURASI ==================
+const PASSWORD = 'persona05';
+const COLS = 20;
+const ROWS_PER_COL = 150; // skema A (±3000 angka)
+const COL_TIME = 180; // 3 menit
+const TOTAL_TIME = 3600; // 60 menit
+
+// ================== DATA PAULI ASLI ==================
+// AKAN DI-INJECT dari Excel Pauli (opsi 1)
+// Format: DATA_PAULI_ASLI[col][row]
+// DATA PAULI STANDAR (dibuat terkontrol, bukan random liar)
+// Distribusi 1–9 seimbang, panjang 150 angka per kolom
+const DATA_PAULI_ASLI = (function(){
+  const cols = 20, rows = 150;
+  const base = [1,2,3,4,5,6,7,8,9];
+  const data = [];
+  let seed = 7; // seed tetap agar konsisten (standar)
+  for(let c=0;c<cols;c++){
+    const col=[];
+    for(let r=0;r<rows;r++){
+      // pola terkontrol: geser + seed, bukan Math.random
+      const val = base[(r + c + seed) % base.length];
+      col.push(val);
+      seed = (seed + 3) % 9;
+    }
+    data.push(col);
+  }
+  return data;
+})();
+
+// ================== STATE ==================
+let currentCol = 0;
+let timeLeft = COL_TIME;
+let totalLeft = TOTAL_TIME;
+let correct = 0;
+let wrong = 0;
+let perKolom = Array(COLS).fill(0);
+let perKolomWrong = Array(COLS).fill(0);
+let dataCols = [];
+let timerId = null;
+let activeCell = null;
+
+// ================== LOGIN ==================
+btnLogin.onclick = () => {
+  if (pw.value.trim() === PASSWORD) {
+    login.style.display = 'none';
+    app.style.display = 'block';
+    start();
+  } else {
+    err.style.display = 'block';
+  }
+};
+
+// ================== INIT ==================
+function start() {
+  buildData();
+  renderCols();
+  setActiveCell(0, 0);
+  startTimer();
+}
+
+// ================== DATA ==================
+function buildData() {
+  dataCols = [];
+  if (Array.isArray(DATA_PAULI_ASLI)) {
+    dataCols = DATA_PAULI_ASLI;
+  } else {
+    // fallback sementara (akan diganti data Excel asli)
+    for (let c = 0; c < COLS; c++) {
+      let r = [];
+      for (let i = 0; i < ROWS_PER_COL; i++) {
+        r.push(Math.floor(Math.random() * 9) + 1);
+      }
+      dataCols.push(r);
+    }
+  }
+}
+
+// ================== RENDER ==================
+function renderCols() {
+  colLeft.innerHTML = '';
+  colRight.innerHTML = '';
+  fillCol(colLeft, currentCol, true);
+  if (currentCol < COLS - 1) fillCol(colRight, currentCol + 1, false);
+}
+
+function fillCol(container, idx, active) {
+  container.className = 'col ' + (active ? 'activeCol' : 'inactive');
+  const inner = document.createElement('div');
+  inner.className = 'col-inner';
+  for (let r = 0; r < dataCols[idx].length - 1; r++) {
+    const d = document.createElement('div');
+    d.className = 'cell';
+    d.dataset.col = idx;
+    d.dataset.row = r;
+    const a = dataCols[idx][r];
+    const b = dataCols[idx][r + 1];
+    d.dataset.sum = a + b;
+    d.innerHTML = '<div>' + a + '</div><div>' + b + '</div>';
+    inner.appendChild(d);
+  }
+  container.appendChild(inner);
+}
+
+function setActiveCell(col, row) {
+  document.querySelectorAll('.cell').forEach(e => e.classList.remove('focus'));
+  const t = document.querySelector('.cell[data-col="' + col + '"][data-row="' + row + '"]');
+  if (t) {
+    t.classList.add('focus');
+    activeCell = t;
+    const h = t.getBoundingClientRect().height;
+    t.parentElement.style.transform = 'translateY(' + (-row * h) + 'px)';
+  }
+}
+
+// ================== INPUT ==================
+function pressKey(num) {
+  if (!activeCell) return;
+  const sum = parseInt(activeCell.dataset.sum, 10);
+  if (num !== sum && num !== sum % 10) {
+    wrong++;
+    perKolomWrong[currentCol]++;
+  }
+  correct++;
+  perKolom[currentCol]++;
+  setActiveCell(currentCol, parseInt(activeCell.dataset.row, 10) + 1);
+}
+
+// ================== TIMER ==================
+function startTimer() {
+  if (timerId) clearInterval(timerId);
+  timerId = setInterval(() => {
+    time.textContent = Math.floor(timeLeft / 60) + ':' + String(timeLeft % 60).padStart(2, '0');
+    timeTotal.textContent = Math.floor(totalLeft / 60) + ':' + String(totalLeft % 60).padStart(2, '0');
+    col.textContent = currentCol + 1;
+
+    timeLeft--;
+    totalLeft--;
+
+    if (timeLeft < 0) {
+      currentCol++;
+      if (currentCol >= COLS) {
+        finish();
+        return;
+      }
+      renderCols();
+      setActiveCell(currentCol, 0);
+      timeLeft = COL_TIME;
+    }
+
+    if (totalLeft <= 0) {
+      finish();
+    }
+  }, 1000);
+}
+
+// ================== FINISH ==================
+function finish() {
+  clearInterval(timerId);
+  app.style.display = 'none';
+  resultPage.style.display = 'block';
+
+  // ================== REKAP DASAR ==================
+  const total = perKolom.reduce((a, b) => a + b, 0);
+  const benar = total - wrong;
+
+  // ================== TABEL KOLOM ==================
+  let html = '<table border="1" cellpadding="6" style="border-collapse:collapse;width:100%"><tr><th>Kolom</th><th>Benar</th><th>Salah</th></tr>';
+  for (let i = 0; i < COLS; i++) {
+    html += '<tr><td>' + (i + 1) + '</td><td>' + (perKolom[i] - perKolomWrong[i]) + '</td><td>' + perKolomWrong[i] + '</td></tr>';
+  }
+  html += '<tr><th>Total</th><th>' + benar + '</th><th>' + wrong + '</th></tr></table>';
+  summaryTable.innerHTML = html;
+
+  // ================== INDIKATOR PAULI ==================
+  const avg = total / COLS;
+  let fluktuasi = 0;
+  for (let i = 1; i < COLS; i++) fluktuasi += Math.abs(perKolom[i] - perKolom[i - 1]);
+  const stabilitas = fluktuasi / COLS;
+
+  const tempoPuncak = perKolom.indexOf(Math.max(...perKolom)) + 1;
+  const awal = perKolom.slice(0, 7).reduce((a, b) => a + b, 0);
+  const akhir = perKolom.slice(13).reduce((a, b) => a + b, 0);
+  const dayaTahan = akhir - awal;
+
+  const salahPct = total ? (wrong / total) * 100 : 0;
+
+  // ================== KATEGORI KLASIK ==================
+  let kategori = 'Cukup';
+  if (salahPct < 0.6 && stabilitas < avg * 0.6 && dayaTahan >= 0) kategori = 'Baik';
+  if (salahPct > 1.5 || stabilitas > avg * 1.2 || dayaTahan < 0) kategori = 'Kurang';
+
+  // ================== TAMPILAN HASIL ==================
+  score.textContent = 'Total Hitungan : ' + total;
+  detail.innerHTML =
+    'Jumlah Benar: <b>' + benar + '</b><br>' +
+    'Jumlah Salah: <b>' + wrong + '</b> (' + salahPct.toFixed(2) + '%)<br>' +
+    'Rata-rata per Kolom: <b>' + avg.toFixed(1) + '</b><br>' +
+    'Tempo Puncak: <b>Kolom ' + tempoPuncak + '</b><br>' +
+    'Indeks Stabilitas: <b>' + stabilitas.toFixed(1) + '</b><br>' +
+    'Daya Tahan Kerja: <b>' + (dayaTahan >= 0 ? 'Baik' : 'Menurun') + '</b>';
+
+  interpretasi.innerHTML =
+    '<b>Kategori Pauli (Klasik):</b> <span style="font-size:18px">' + kategori + '</span><br>' +
+    '<small>Penilaian mencakup kecepatan, ketelitian, stabilitas, dan ketahanan kerja.</small>';
+
+  drawPauliChart();
+}
+
+// ================== GRAFIK PAULI KLASIK ==================
+function drawPauliChart() {
+  const c = document.getElementById('pauliChart');
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  const max = Math.max(...perKolom) + 10;
+  const stepX = c.width / (COLS + 1);
+
+  ctx.beginPath();
+  ctx.moveTo(stepX, c.height - (perKolom[0] / max) * c.height);
+  for (let i = 1; i < COLS; i++) {
+    ctx.lineTo(stepX * (i + 1), c.height - (perKolom[i] / max) * c.height);
+  }
+  ctx.strokeStyle = '#1e88e5';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#000';
+  ctx.font = '12px Arial';
+  for (let i = 0; i < COLS; i++) {
+    ctx.fillText(i + 1, stepX * (i + 1) - 4, c.height - 5);
+  }
+}
+</script>
+</body>
+</html>
